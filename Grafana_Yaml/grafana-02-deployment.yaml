@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: grafana-server
+  name: grafana-deployment
+  namespace: prometheus-monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana-server
+  template:
+    metadata:
+      labels:
+        app: grafana-server
+    spec:
+      containers:
+      - env: []
+        image: grafana/grafana:7.2.0-ubuntu
+        name: grafana
+        ports:
+        - containerPort: 3000
+          name: grafana-server
+        #readinessProbe:
+        #  httpGet:
+        #    path: /api/health
+        #    port: http
+        #resources:
+        # limits:
+        #   cpu: 1000m
+        #   memory: "4Gi"
+        # requests:
+        #   cpu: 500m
+        #   memory: "1Gi"
+        volumeMounts:
+        - mountPath: /var/lib/grafana
+          name: grafana-persistent-storage
+          readOnly: false
+        - mountPath: /etc/grafana/provisioning/datasources
+          name: grafana-datasources
+          readOnly: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+      serviceAccountName: grafana-server
+      volumes:
+      - name: grafana-persistent-storage
+        emptyDir: {}
+      - name: grafana-datasources
+        configMap:
+               defaultMode: 420
+               name: grafana-datasources
